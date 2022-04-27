@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+
+import argparse
+import sys
+import time
+import traceback
+
+from solawi.mailinglists import (MAPPING, members_url)
+from solawi.nextcloud import get_group_emails
+from solawi.snapshots import (read_snapshot, save_snapshot)
+
+
+def print_all():
+    for groupname in MAPPING:
+        print('---', groupname.upper())
+        users = get_group_emails(groupname)
+        print('\n'.join(a['mail'] for a in users))
+
+
+def save():
+    timestamp = time.time()
+    users = read_snapshot()
+    for groupname in MAPPING:
+        if not groupname in users:
+            users[groupname] = []
+        old_users = users[groupname]
+        new_users = get_group_emails(
+            groupname, skip_these_users=old_users)
+        for new_user in new_users:
+            users[groupname] += [{
+                'id': new_user['id'],
+                'mail': new_user['mail'],
+                'ts': timestamp
+            }]
+        if new_users:
+            print('---', groupname.upper())
+            print('\n'.join(a['mail'] for a in new_users))
+            if MAPPING[groupname]:
+                print('''---
+Please update here: {}'''.format(members_url(MAPPING[groupname]))) 
+    save_snapshot(users)
+
+
+def main():
+    parser = argparse.ArgumentParser(description='List current members.')
+    parser.add_argument('--save',
+                        action='store_true',
+                        help='Save current snapshot of members. List new entries.')
+    args = parser.parse_args()
+
+    if args.save:
+        save()
+        sys.exit(0)
+    if not args.list_changed:
+        print_all()
+    else:
+        print('not implemented')
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        traceback.print_exc()
+        sys.exit(1)
+ 
