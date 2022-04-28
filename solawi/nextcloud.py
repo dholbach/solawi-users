@@ -1,5 +1,6 @@
-import requests
 import xml.etree.ElementTree as ET
+
+import requests
 
 from .secrets import USER, PASSWORD, HOST
 
