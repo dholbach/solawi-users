@@ -51,10 +51,7 @@ def main():
     if args.save:
         save()
         sys.exit(0)
-    if not args.list_changed:
-        print_all()
-    else:
-        print('not implemented')
+    print_all()
 
 if __name__ == "__main__":
     try:
